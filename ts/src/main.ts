@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 
-import { parseArgs } from "./cli.js";
+import { parseArgs } from "./cli/cli.js";
 import {
   runCommit,
   runConfig,
@@ -10,12 +10,17 @@ import {
   runMerge,
   runRevert,
   runStatus,
-} from "./commands.js";
-import { SnapError } from "./errors.js";
-import { locateRepositoryRoot, requireRepository, runEffect } from "./helpers.js";
-import { serve } from "./http.js";
-import { renderVersionOutput, resolvePresentation, sgr, versionLine } from "./presentation.js";
-import { serializeRepository } from "./repository.js";
+} from "./cli/commands.js";
+import { SnapError } from "./core/errors.js";
+import { locateRepositoryRoot, requireRepository, runEffect } from "./cli/helpers.js";
+import { serve } from "./http/http.js";
+import {
+  renderVersionOutput,
+  resolvePresentation,
+  sgr,
+  versionLine,
+} from "./presentation/presentation.js";
+import { serializeRepository } from "./repository/repository.js";
 
 export type RunEnv = {
   readonly cwd: string;

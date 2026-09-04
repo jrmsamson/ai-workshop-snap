@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import type { Result } from "./types.js";
+import type { Result } from "../core/types.js";
 import type { Presentation } from "./presentation.js";
 import {
   escapeLogMessage,

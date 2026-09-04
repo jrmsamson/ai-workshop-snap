@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { test, type TestContext } from "node:test";
 import { Effect, Either } from "effect";
-import { type SnapError } from "./errors.js";
+import { type SnapError } from "../core/errors.js";
 import * as fsutil from "./fsutil.js";
 
 const run = <A>(effect: Effect.Effect<A, SnapError>): Promise<A> => Effect.runPromise(effect);

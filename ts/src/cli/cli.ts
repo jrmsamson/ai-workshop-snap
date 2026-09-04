@@ -1,6 +1,6 @@
 import type { DiffTarget } from "./commands.js";
-import type { Result } from "./types.js";
-import { err, ok } from "./types.js";
+import type { Result } from "../core/types.js";
+import { err, ok } from "../core/types.js";
 
 export type Parsed =
   | { readonly kind: "init"; readonly path?: string }

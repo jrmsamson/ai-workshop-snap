@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { replayVersion } from "./replay.js";
-import { diffTokens } from "./diff.js";
-import { tokenize } from "./text.js";
+import { diffTokens } from "../core/diff.js";
+import { tokenize } from "../core/text.js";
 import type {
   Change,
   ContributorId,
@@ -13,7 +13,7 @@ import type {
   Tree,
   Version,
   Result,
-} from "./types.js";
+} from "../core/types.js";
 
 const unwrap = <A>(result: Result<A>): A => {
   if (result._tag === "err") {

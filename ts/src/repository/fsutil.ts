@@ -3,8 +3,8 @@ import type { Dirent, Stats } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { Effect } from "effect";
-import { internalError, type SnapError } from "./errors.js";
-import type { Tree } from "./types.js";
+import { internalError, type SnapError } from "../core/errors.js";
+import type { Tree } from "../core/types.js";
 
 const describeError = (err: unknown): string => {
   if (err instanceof Error) {

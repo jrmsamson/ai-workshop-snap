@@ -1,7 +1,7 @@
 import { Either, Schema } from "effect";
 
-import type { ContributorConfig, Result } from "./types.js";
-import { err, ok } from "./types.js";
+import type { ContributorConfig, Result } from "../core/types.js";
+import { err, ok } from "../core/types.js";
 
 /**
  * Effect Schema documentation of the on-disk formats (SPEC §4.1). These

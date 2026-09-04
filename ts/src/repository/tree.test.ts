@@ -6,11 +6,11 @@ import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import type { SnapError } from "./errors.js";
-import { compareTrackedPath } from "./path.js";
-import { decodeUtf8, textToUtf8 } from "./text.js";
+import type { SnapError } from "../core/errors.js";
+import { compareTrackedPath } from "../core/path.js";
+import { decodeUtf8, textToUtf8 } from "../core/text.js";
 import { emptyTree, scanWorkingTree, treeFromEntries } from "./tree.js";
-import type { Tree } from "./types.js";
+import type { Tree } from "../core/types.js";
 
 const created: string[] = [];
 

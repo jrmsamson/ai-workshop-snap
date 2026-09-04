@@ -2,10 +2,10 @@ import * as http from "node:http";
 import * as https from "node:https";
 import { Effect } from "effect";
 
-import { SnapError, internalError, userError } from "./errors.js";
-import { parseJson } from "./json.js";
-import { validateRepositoryJson } from "./repository.js";
-import type { Repository } from "./types.js";
+import { SnapError, internalError, userError } from "../core/errors.js";
+import { parseJson } from "../format/json.js";
+import { validateRepositoryJson } from "../repository/repository.js";
+import type { Repository } from "../core/types.js";
 
 /**
  * A bound snapshot server: the resolved `url`/`baseUrl` plus an idempotent

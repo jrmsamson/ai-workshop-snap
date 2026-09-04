@@ -1,8 +1,12 @@
-import { readContributorConfig, writeGlobalConfig, writeLocalConfig } from "./config.js";
-import { validateContributorId } from "./contributor.js";
+import {
+  readContributorConfig,
+  writeGlobalConfig,
+  writeLocalConfig,
+} from "../repository/config.js";
+import { validateContributorId } from "../core/contributor.js";
 import { resolve as resolvePath } from "node:path";
-import { userError } from "./errors.js";
-import { ensureDir, materializeTree } from "./fsutil.js";
+import { userError } from "../core/errors.js";
+import { ensureDir, materializeTree } from "../repository/fsutil.js";
 import {
   changesForTrees,
   ensurePrefixFree,
@@ -19,7 +23,7 @@ import {
   treeEntries,
   withPatch,
 } from "./helpers.js";
-import { fetchRepository } from "./http.js";
+import { fetchRepository } from "../http/http.js";
 import {
   escapeLogMessage,
   renderLogEntry,
@@ -28,16 +32,16 @@ import {
   renderStatusRow,
   renderSuccess,
   sgr,
-} from "./presentation.js";
-import { isKnownVersion, saveRepository } from "./repository.js";
-import { integrationOrder, replayVersion } from "./replay.js";
-import { scanWorkingTree } from "./tree.js";
-import { diffTokens } from "./diff.js";
-import { isText, tokenize } from "./text.js";
-import { formatVersion, joinVersions, parseVersion } from "./version.js";
-import { compareTrackedPath } from "./path.js";
-import type { ContributorId, Patch, Repository, Result, Tree, Version } from "./types.js";
-import { err, ok } from "./types.js";
+} from "../presentation/presentation.js";
+import { isKnownVersion, saveRepository } from "../repository/repository.js";
+import { integrationOrder, replayVersion } from "../repository/replay.js";
+import { scanWorkingTree } from "../repository/tree.js";
+import { diffTokens } from "../core/diff.js";
+import { isText, tokenize } from "../core/text.js";
+import { formatVersion, joinVersions, parseVersion } from "../core/version.js";
+import { compareTrackedPath } from "../core/path.js";
+import type { ContributorId, Patch, Repository, Result, Tree, Version } from "../core/types.js";
+import { err, ok } from "../core/types.js";
 import { utf8 } from "./helpers.js";
 
 export type Ctx = {

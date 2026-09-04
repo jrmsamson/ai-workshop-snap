@@ -5,10 +5,10 @@ import { Effect, Either } from "effect";
 
 import { fetchRepository, startSnapshotServer } from "./http.js";
 import type { SnapshotServer } from "./http.js";
-import { parseJson } from "./json.js";
-import { serializeRepository, validateRepositoryJson } from "./repository.js";
-import type { Repository } from "./types.js";
-import { type SnapError } from "./errors.js";
+import { parseJson } from "../format/json.js";
+import { serializeRepository, validateRepositoryJson } from "../repository/repository.js";
+import type { Repository } from "../core/types.js";
+import { type SnapError } from "../core/errors.js";
 
 const run = <A>(effect: Effect.Effect<A, SnapError>): Promise<A> => Effect.runPromise(effect);
 

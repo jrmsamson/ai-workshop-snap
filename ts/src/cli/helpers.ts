@@ -10,15 +10,15 @@ import type {
   TrackedPath,
   Tree,
   Version,
-} from "./types.js";
-import { err, ok } from "./types.js";
-import { internalError, userError, type SnapError } from "./errors.js";
-import { readRepositoryJson } from "./repository.js";
-import { compareTrackedPath } from "./path.js";
-import { encodeBase64 } from "./patch.js";
-import { diffTokens } from "./diff.js";
-import { isText, textToUtf8, tokenize } from "./text.js";
-import { replayVersion } from "./replay.js";
+} from "../core/types.js";
+import { err, ok } from "../core/types.js";
+import { internalError, userError, type SnapError } from "../core/errors.js";
+import { readRepositoryJson } from "../repository/repository.js";
+import { compareTrackedPath } from "../core/path.js";
+import { encodeBase64 } from "../core/patch.js";
+import { diffTokens } from "../core/diff.js";
+import { isText, textToUtf8, tokenize } from "../core/text.js";
+import { replayVersion } from "../repository/replay.js";
 
 /** Runs an effect, rethrowing its typed error directly (bypasses FiberFailure wrapping). */
 export const runEffect = async <A>(effect: Effect.Effect<A, SnapError>): Promise<A> => {

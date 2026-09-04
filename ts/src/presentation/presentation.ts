@@ -1,5 +1,5 @@
-import type { Result } from "./types.js";
-import { err, ok } from "./types.js";
+import type { Result } from "../core/types.js";
+import { err, ok } from "../core/types.js";
 
 export type StreamMode = "terminal" | "plain";
 

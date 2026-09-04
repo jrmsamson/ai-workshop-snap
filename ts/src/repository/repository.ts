@@ -1,11 +1,11 @@
 import { Effect } from "effect";
 
-import { validateContributorId } from "./contributor.js";
-import { SnapError, internalError, userError } from "./errors.js";
+import { validateContributorId } from "../core/contributor.js";
+import { SnapError, internalError, userError } from "../core/errors.js";
 import { atomicWriteText, readTextFileIfExists } from "./fsutil.js";
-import { parseJson } from "./json.js";
-import { compareTrackedPath, validateTrackedPath } from "./path.js";
-import { applyPatchToTree, decodeBase64 } from "./patch.js";
+import { parseJson } from "../format/json.js";
+import { compareTrackedPath, validateTrackedPath } from "../core/path.js";
+import { applyPatchToTree, decodeBase64 } from "../core/patch.js";
 import { replayVersion } from "./replay.js";
 import type {
   Change,
@@ -18,8 +18,8 @@ import type {
   Revision,
   TrackedPath,
   Version,
-} from "./types.js";
-import { err, ok, type Result } from "./types.js";
+} from "../core/types.js";
+import { err, ok, type Result } from "../core/types.js";
 
 const MAX_SAFE = 9007199254740991;
 

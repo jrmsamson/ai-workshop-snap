@@ -11,7 +11,7 @@ import {
   serializeRepository,
   validateRepositoryJson,
 } from "./repository.js";
-import type { Repository } from "./types.js";
+import type { Repository } from "../core/types.js";
 
 const unwrap = <A>(result: { _tag: "ok"; value: A } | { _tag: "err"; detail: string }): A => {
   if (result._tag === "err") {

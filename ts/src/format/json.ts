@@ -1,5 +1,5 @@
-import { err, ok } from "./types.js";
-import type { Result } from "./types.js";
+import { err, ok } from "../core/types.js";
+import type { Result } from "../core/types.js";
 
 const JSON_NUMBER = /^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$/;
 

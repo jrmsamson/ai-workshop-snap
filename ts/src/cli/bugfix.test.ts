@@ -2,14 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { runCommit, runConfig, runInit, runStatus, type Ctx } from "./commands.js";
-import { applyChange, applyPatchToTree } from "./patch.js";
-import { diffTokens, validateEditScript } from "./diff.js";
-import { parseJson } from "./json.js";
+import { applyChange, applyPatchToTree } from "../core/patch.js";
+import { diffTokens, validateEditScript } from "../core/diff.js";
+import { parseJson } from "../format/json.js";
 import { locateRepositoryRoot, runEffect, revisionAfter, MAX_REVISION } from "./helpers.js";
-import { replayVersion } from "./replay.js";
-import { validateRepositoryJson } from "./repository.js";
-import { textToUtf8, tokenize } from "./text.js";
-import type { Change, Patch, Tree, Version } from "./types.js";
+import { replayVersion } from "../repository/replay.js";
+import { validateRepositoryJson } from "../repository/repository.js";
+import { textToUtf8, tokenize } from "../core/text.js";
+import type { Change, Patch, Tree, Version } from "../core/types.js";
 
 const tree = (entries: ReadonlyArray<readonly [string, string]>): Tree =>
   new Map(entries.map(([path, text]) => [path, textToUtf8(text)] as const));

@@ -2,9 +2,9 @@ import { Effect } from "effect";
 import type { Dirent } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 
-import { internalError, userError, type SnapError } from "./errors.js";
-import { validateTrackedPath } from "./path.js";
-import type { TrackedPath, Tree } from "./types.js";
+import { internalError, userError, type SnapError } from "../core/errors.js";
+import { validateTrackedPath } from "../core/path.js";
+import type { TrackedPath, Tree } from "../core/types.js";
 
 type Entry = readonly [TrackedPath, Uint8Array];
 

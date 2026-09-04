@@ -5,7 +5,7 @@ import * as path from "node:path";
 import { test, type TestContext } from "node:test";
 import { Effect, Either } from "effect";
 import * as config from "./config.js";
-import { type SnapError } from "./errors.js";
+import { type SnapError } from "../core/errors.js";
 
 const run = <A>(effect: Effect.Effect<A, SnapError>): Promise<A> => Effect.runPromise(effect);
 

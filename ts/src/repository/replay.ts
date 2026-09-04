@@ -1,8 +1,8 @@
-import { applyEditScript, diffTokens } from "./diff.js";
-import { transformEdit } from "./ot.js";
-import { applyPatchToTree } from "./patch.js";
-import { compareTrackedPath, pathSegmentsSharePrefix } from "./path.js";
-import { textToUtf8, tokenizeBytes } from "./text.js";
+import { applyEditScript, diffTokens } from "../core/diff.js";
+import { transformEdit } from "../core/ot.js";
+import { applyPatchToTree } from "../core/patch.js";
+import { compareTrackedPath, pathSegmentsSharePrefix } from "../core/path.js";
+import { textToUtf8, tokenizeBytes } from "../core/text.js";
 import type {
   Change,
   ContributorId,
@@ -13,9 +13,9 @@ import type {
   Tree,
   Version,
   Warning,
-} from "./types.js";
-import { err, ok } from "./types.js";
-import { snapCompare } from "./version.js";
+} from "../core/types.js";
+import { err, ok } from "../core/types.js";
+import { snapCompare } from "../core/version.js";
 
 const sameBytes = (a: Uint8Array | undefined, b: Uint8Array | undefined): boolean => {
   if (a === undefined || b === undefined) {

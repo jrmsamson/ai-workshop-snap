@@ -1,11 +1,11 @@
 import { Effect } from "effect";
 
-import { validateContributorId } from "./contributor.js";
-import { internalError, type SnapError, userError } from "./errors.js";
+import { validateContributorId } from "../core/contributor.js";
+import { internalError, type SnapError, userError } from "../core/errors.js";
 import { atomicWriteText, readTextFileIfExists } from "./fsutil.js";
-import { parseJson } from "./json.js";
-import type { ContributorId, Result } from "./types.js";
-import { err, ok } from "./types.js";
+import { parseJson } from "../format/json.js";
+import type { ContributorId, Result } from "../core/types.js";
+import { err, ok } from "../core/types.js";
 
 export const configFilePath = (root: string): string => `${root}/.snap/config.json`;
 
