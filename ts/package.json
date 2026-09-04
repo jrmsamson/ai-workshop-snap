@@ -13,7 +13,8 @@
     "lint": "eslint .",
     "format": "prettier --write src eslint.config.js tsconfig.json package.json ../tsconfig.base.json",
     "format:check": "prettier --check src eslint.config.js tsconfig.json package.json ../tsconfig.base.json",
-    "preflight": "npm run typecheck && npm run lint && npm run format:check"
+    "preflight": "npm run typecheck && npm run lint && npm run format:check",
+    "test": "tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "effect": "^3.22.1"
