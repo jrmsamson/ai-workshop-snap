@@ -39,8 +39,8 @@ conservative plain-output opt-out.
 From the repository root:
 
 ```bash
-./capstones/snap/run init /tmp/example
-./capstones/snap/run config --global contributor.id you@example.com
+./run init /tmp/example
+./run config --global contributor.id you@example.com
 cd /tmp/example
 echo hello > hello.txt
 /path/to/ai-workshop/capstones/snap/run commit "add greeting"
@@ -49,7 +49,7 @@ echo hello > hello.txt
 Choose the bundled implementation language explicitly when needed:
 
 ```bash
-./capstones/snap/run --lang ts --version
+./run --lang ts --version
 ```
 
 The supported surface is:
@@ -75,19 +75,21 @@ staging area, checkout, or unresolved conflicts.
 Run the full language-neutral acceptance suite against your selected workspace:
 
 ```bash
-./capstones/snap/verify --lang ts
+./verify --lang ts
 ```
 
 Replace `ts` with `rust` or `scala` when appropriate. The verifier builds the
 Rust or Scala workspace before running the suite; for TypeScript it installs
 locked dependencies and executes the candidate through `tsx`. Run
-`npm run build` separately when you want a static type-check.
+`npm run preflight` in `ts/` when you want the static gate — type-check, lint
+(`typescript-eslint` `strictTypeChecked`), and a Prettier format check. (The
+former `npm run build` is kept as an alias for type-checking only.)
 
 
 Or test any executable implemented in any language:
 
 ```bash
-./capstones/snap/verify --candidate /path/to/snap
+./verify --candidate /path/to/snap
 ```
 
 The YAML suite creates isolated temporary repositories and checks exact output,

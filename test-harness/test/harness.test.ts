@@ -1,19 +1,21 @@
 import assert from "node:assert/strict";
-import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { discoverTests, loadTest } from "../src/yaml-loader.js";
 import { parseJsonUnique } from "../src/json.js";
 import { interpolate } from "../src/interpolate.js";
-import { deterministicEnvironment, runProcess } from "../src/process.js";
+import { deterministicEnvironment, runProcess, startProcess } from "../src/process.js";
 import { runCase } from "../src/runner.js";
 
-test("loader validates the versioned tagged format", () => {
+void test("loader validates the versioned tagged format", () => {
   const root = mkdtempSync(join(tmpdir(), "snap-loader-test-"));
   try {
     const valid = join(root, "valid.yaml");
-    writeFileSync(valid, `
+    writeFileSync(
+      valid,
+      `
 format: 1
 name: valid
 steps:
@@ -22,11 +24,14 @@ steps:
       expect:
         - type: exit_code
           value: 0
-`);
+`,
+    );
     assert.equal(loadTest(valid).steps[0]?.type, "run");
 
     const missingExit = join(root, "missing-exit.yaml");
-    writeFileSync(missingExit, `
+    writeFileSync(
+      missingExit,
+      `
 format: 1
 name: invalid
 steps:
@@ -34,39 +39,49 @@ steps:
       expect:
         - type: stdout_equals
           value: ""
-`);
+`,
+    );
     assert.throws(() => loadTest(missingExit), /requires exactly one exit_code/);
 
     const typo = join(root, "typo.yaml");
-    writeFileSync(typo, `
+    writeFileSync(
+      typo,
+      `
 format: 1
 name: invalid
 steps:
   - mkdir:
       paths: repo
-`);
+`,
+    );
     assert.throws(() => loadTest(typo), /unknown field.*paths/);
     rmSync(missingExit);
     rmSync(typo);
-    assert.deepEqual(discoverTests(root, "valid").map((item) => item.name), ["valid"]);
+    assert.deepEqual(
+      discoverTests(root, "valid").map((item) => item.name),
+      ["valid"],
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
 });
 
-test("JSON parser rejects duplicate keys at any depth", () => {
+void test("JSON parser rejects duplicate keys at any depth", () => {
   assert.deepEqual(parseJsonUnique('{"a":[{"b":1}]}'), { a: [{ b: 1 }] });
   assert.throws(() => parseJsonUnique('{"a":{"x":1,"x":2}}'), /duplicate JSON key.*x/);
 });
 
-test("interpolation is single-pass and supports literal delimiters", () => {
-  const variables = new Map([["value", "{{other}}"], ["other", "expanded"]]);
+void test("interpolation is single-pass and supports literal delimiters", () => {
+  const variables = new Map([
+    ["value", "{{other}}"],
+    ["other", "expanded"],
+  ]);
   assert.equal(interpolate("{{value}}", variables), "{{other}}");
   assert.equal(interpolate("{{{{other}}}}", variables), "{{other}}");
   assert.throws(() => interpolate("{{missing}}", variables), /unknown variable/);
 });
 
-test("foreground process timeouts are harness failures", async () => {
+void test("foreground process timeouts are harness failures", async () => {
   const root = mkdtempSync(join(tmpdir(), "snap-timeout-test-"));
   try {
     await assert.rejects(
@@ -85,7 +100,7 @@ test("foreground process timeouts are harness failures", async () => {
   }
 });
 
-test("fast process exit does not turn a closed stdin pipe into a harness failure", async () => {
+void test("fast process exit does not turn a closed stdin pipe into a harness failure", async () => {
   const root = mkdtempSync(join(tmpdir(), "snap-stdin-epipe-test-"));
   try {
     const result = await runProcess({
@@ -102,7 +117,7 @@ test("fast process exit does not turn a closed stdin pipe into a harness failure
   }
 });
 
-test("process output is bounded", async () => {
+void test("process output is bounded", async () => {
   const root = mkdtempSync(join(tmpdir(), "snap-output-limit-test-"));
   try {
     await assert.rejects(
@@ -121,11 +136,13 @@ test("process output is bounded", async () => {
   }
 });
 
-test("runner executes ordered process, filesystem, HTTP, and background operations", async () => {
+void test("runner executes ordered process, filesystem, HTTP, and background operations", async () => {
   const root = mkdtempSync(join(tmpdir(), "snap-runner-test-"));
   const candidate = join(root, "candidate.mjs");
   const yaml = join(root, "case.yaml");
-  writeFileSync(candidate, `#!/usr/bin/env node
+  writeFileSync(
+    candidate,
+    `#!/usr/bin/env node
 import { createServer } from "node:http";
 const [command, ...args] = process.argv.slice(2);
 if (command === "echo") {
@@ -147,9 +164,12 @@ if (command === "echo") {
   process.stderr.write("unknown\\n");
   process.exitCode = 7;
 }
-`);
+`,
+  );
   chmodSync(candidate, 0o755);
-  writeFileSync(yaml, `
+  writeFileSync(
+    yaml,
+    `
 format: 1
 name: complete harness workflow
 timeout: 15
@@ -245,7 +265,8 @@ steps:
       id: candidate_server
       expect:
         - {type: exit_code, value: 0}
-`);
+`,
+  );
   try {
     const result = await runCase(loadTest(yaml), { candidate, keepFailed: true });
     assert.equal(result.passed, true, JSON.stringify(result, null, 2));
@@ -255,19 +276,22 @@ steps:
   }
 });
 
-test("runner rejects paths that traverse a fixture symlink", async () => {
+void test("runner rejects paths that traverse a fixture symlink", async () => {
   const root = mkdtempSync(join(tmpdir(), "snap-confinement-test-"));
   const candidate = join(root, "candidate");
   const yaml = join(root, "case.yaml");
   writeFileSync(candidate, "#!/bin/sh\nexit 0\n");
   chmodSync(candidate, 0o755);
-  writeFileSync(yaml, `
+  writeFileSync(
+    yaml,
+    `
 format: 1
 name: confinement
 steps:
   - symlink: {path: escape, target: /tmp}
   - write_file: {path: escape/owned, text: nope}
-`);
+`,
+  );
   try {
     const result = await runCase(loadTest(yaml), { candidate });
     assert.equal(result.passed, false);
@@ -277,13 +301,15 @@ steps:
   }
 });
 
-test("runner stops after the first failed assertion", async () => {
+void test("runner stops after the first failed assertion", async () => {
   const root = mkdtempSync(join(tmpdir(), "snap-fail-fast-test-"));
   const candidate = join(root, "candidate");
   const yaml = join(root, "case.yaml");
   writeFileSync(candidate, "#!/bin/sh\nprintf 'actual\\n'\n");
   chmodSync(candidate, 0o755);
-  writeFileSync(yaml, `
+  writeFileSync(
+    yaml,
+    `
 format: 1
 name: fail fast
 steps:
@@ -293,7 +319,8 @@ steps:
         - {type: exit_code, value: 0}
         - {type: stdout_equals, value: "expected\\n"}
   - write_file: {path: should-not-exist, text: "{{output}}"}
-`);
+`,
+  );
   try {
     const result = await runCase(loadTest(yaml), { candidate });
     assert.equal(result.passed, false);
@@ -304,7 +331,7 @@ steps:
   }
 });
 
-test("runner does not follow a final symlink for file writes or working directories", async () => {
+void test("runner does not follow a final symlink for file writes or working directories", async () => {
   const root = mkdtempSync(join(tmpdir(), "snap-final-symlink-test-"));
   const candidate = join(root, "candidate");
   writeFileSync(candidate, "#!/bin/sh\nexit 0\n");
@@ -312,20 +339,76 @@ test("runner does not follow a final symlink for file writes or working director
   try {
     for (const [name, operation, expected] of [
       ["write", "  - write_file: {path: escape, text: nope}", /write target is a symlink/],
-      ["cwd", "  - run:\n      cwd: escape\n      expect: [{type: exit_code, value: 0}]", /working directory is a symlink/],
+      [
+        "cwd",
+        "  - run:\n      cwd: escape\n      expect: [{type: exit_code, value: 0}]",
+        /working directory is a symlink/,
+      ],
     ] as const) {
       const yaml = join(root, `${name}.yaml`);
-      writeFileSync(yaml, `
+      writeFileSync(
+        yaml,
+        `
 format: 1
 name: final symlink ${name}
 steps:
   - symlink: {path: escape, target: /tmp}
 ${operation}
-`);
+`,
+      );
       const result = await runCase(loadTest(yaml), { candidate });
       assert.equal(result.passed, false);
       assert.match(result.error ?? "", expected);
     }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+void test("start with an invalid ready pattern never spawns the candidate", async () => {
+  const root = mkdtempSync(join(tmpdir(), "snap-ready-invalid-test-"));
+  const candidate = join(root, "candidate");
+  const marker = join(root, "started");
+  writeFileSync(candidate, `#!/bin/sh\ntouch ${JSON.stringify(marker)}\nsleep 3\n`);
+  chmodSync(candidate, 0o755);
+  try {
+    await assert.rejects(
+      startProcess(
+        { candidate, args: [], cwd: root, env: deterministicEnvironment(root), stdin: "" },
+        { stream: "stdout", pattern: "(unclosed" },
+        5_000,
+      ),
+      /Invalid regular expression/,
+    );
+    assert.equal(existsSync(marker), false);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+void test("start detection tolerates a multi-byte character split across chunks", async () => {
+  const root = mkdtempSync(join(tmpdir(), "snap-ready-utf8-test-"));
+  const candidate = join(root, "candidate");
+  writeFileSync(
+    candidate,
+    `#!/usr/bin/env node
+process.stdout.write(Buffer.from([0xe2, 0x9c]));
+setTimeout(() => {
+  process.stdout.write(Buffer.from([0x93]));
+  process.stdout.write("READY\\n");
+}, 50);
+setTimeout(() => process.exit(0), 300);
+`,
+  );
+  chmodSync(candidate, 0o755);
+  try {
+    const started = await startProcess(
+      { candidate, args: [], cwd: root, env: deterministicEnvironment(root), stdin: "" },
+      { stream: "stdout", pattern: "READY" },
+      5_000,
+    );
+    const result = await started.managed.completion;
+    assert.equal(result.exitCode, 0);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

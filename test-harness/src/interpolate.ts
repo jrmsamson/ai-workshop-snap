@@ -28,7 +28,7 @@ export function interpolate(value: string, variables: ReadonlyMap<string, string
     } else if (value.startsWith("}}", index)) {
       throw invalidExpression(value);
     } else {
-      result += value[index];
+      result += value.charAt(index);
       index++;
     }
   }

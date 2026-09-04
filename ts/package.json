@@ -3,13 +3,30 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "tsx src/main.ts",
-    "build": "tsc --noEmit"
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write src eslint.config.js tsconfig.json package.json ../tsconfig.base.json",
+    "format:check": "prettier --check src eslint.config.js tsconfig.json package.json ../tsconfig.base.json",
+    "preflight": "npm run typecheck && npm run lint && npm run format:check"
+  },
+  "dependencies": {
+    "effect": "^3.22.1"
   },
   "devDependencies": {
+    "@effect/language-service": "^0.87.2",
+    "@eslint/js": "^9.39.5",
     "@types/node": "^22.18.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.6",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.69.0"
   }
 }

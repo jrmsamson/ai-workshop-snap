@@ -20,7 +20,7 @@ export interface ManagedProcess {
 
 export function deterministicEnvironment(root: string, changes?: Environment): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {
-    PATH: process.env.PATH ?? "/usr/bin:/bin",
+    PATH: process.env["PATH"] ?? "/usr/bin:/bin",
     HOME: `${root}/home`,
     TMPDIR: `${root}/tmp`,
     NO_COLOR: "1",
@@ -31,25 +31,32 @@ export function deterministicEnvironment(root: string, changes?: Environment): N
   return applyEnvironment(env, changes);
 }
 
-export function applyEnvironment(base: NodeJS.ProcessEnv, changes?: Environment): NodeJS.ProcessEnv {
-  const env = { ...base };
+export function applyEnvironment(
+  base: NodeJS.ProcessEnv,
+  changes?: Environment,
+): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = {};
+  for (const [key, value] of Object.entries(base)) {
+    if (changes !== undefined && changes[key] === null) continue;
+    env[key] = value;
+  }
   for (const [key, value] of Object.entries(changes ?? {})) {
-    if (value === null) delete env[key];
-    else env[key] = value;
+    if (value !== null) env[key] = value;
   }
   return env;
 }
 
 export async function runProcess(options: ProcessOptions): Promise<ProcessResult> {
   const managed = launch(options);
-  let timedOut = false;
+  const state = { timedOut: false };
   const timer = setTimeout(() => {
-    timedOut = true;
+    state.timedOut = true;
     killGroup(managed.child, "SIGKILL");
   }, options.timeoutMs);
   try {
     const result = await managed.completion;
-    if (timedOut) throw new Error(`process did not exit within ${options.timeoutMs}ms`);
+    if (state.timedOut)
+      throw new Error(`process did not exit within ${String(options.timeoutMs)}ms`);
     return result;
   } finally {
     clearTimeout(timer);
@@ -61,42 +68,56 @@ export async function startProcess(
   ready: StartStep["ready"],
   timeoutMs: number,
 ): Promise<{ managed: ManagedProcess; match: RegExpMatchArray }> {
-  const managed = launch({ ...options, timeoutMs });
   const regex = new RegExp(ready.pattern, "m");
+  const managed = launch({ ...options, timeoutMs });
   try {
-    return await new Promise((resolve, reject) => {
-      let settled = false;
-      const finish = (error?: Error, match?: RegExpMatchArray) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        managed.output.changed.delete(check);
-        if (error) {
-          cleanupProcess(managed);
-          reject(error);
-        }
-        else resolve({ managed, match: match! });
-      };
-      const check = () => {
-        try {
-          const text = ready.stream === "stdout" ? managed.output.stdoutText() : managed.output.stderrText();
-          const match = text.match(regex);
-          if (match) finish(undefined, match);
-        } catch (error) {
-          finish(error as Error);
-        }
-      };
-      const timer = setTimeout(() => {
-        killGroup(managed.child, "SIGKILL");
-        finish(new Error(`background process did not become ready within ${timeoutMs}ms`));
-      }, timeoutMs);
-      managed.output.changed.add(check);
-      managed.completion.then(
-        (result) => finish(new Error(`background process exited before ready (exit ${result.exitCode})`)),
-        (error) => finish(error as Error),
-      );
-      check();
-    });
+    return await new Promise<{ managed: ManagedProcess; match: RegExpMatchArray }>(
+      (resolve, reject) => {
+        let settled = false;
+        const finish = (error: Error | undefined, match?: RegExpMatchArray) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          managed.output.changed.delete(check);
+          if (error) {
+            cleanupProcess(managed);
+            reject(error);
+          } else if (match) {
+            resolve({ managed, match });
+          } else {
+            cleanupProcess(managed);
+            reject(new Error("background process became ready with no match"));
+          }
+        };
+        const check = () => {
+          try {
+            const text = managed.output.readyText(ready.stream);
+            const match = text.match(regex);
+            if (match) finish(undefined, match);
+          } catch (error) {
+            finish(error as Error);
+          }
+        };
+        const timer = setTimeout(() => {
+          killGroup(managed.child, "SIGKILL");
+          finish(
+            new Error(`background process did not become ready within ${String(timeoutMs)}ms`),
+          );
+        }, timeoutMs);
+        managed.output.changed.add(check);
+        managed.completion.then(
+          (result) => {
+            finish(
+              new Error(`background process exited before ready (exit ${String(result.exitCode)})`),
+            );
+          },
+          (error: unknown) => {
+            finish(error as Error);
+          },
+        );
+        check();
+      },
+    );
   } catch (error) {
     cleanupProcess(managed);
     await managed.completion.catch(() => undefined);
@@ -117,7 +138,7 @@ export async function stopProcess(
       new Promise<never>((_, reject) => {
         timer = setTimeout(() => {
           killGroup(managed.child, "SIGKILL");
-          reject(new Error(`background process did not stop within ${timeoutMs}ms`));
+          reject(new Error(`background process did not stop within ${String(timeoutMs)}ms`));
         }, timeoutMs);
       }),
     ]);
@@ -142,7 +163,7 @@ function launch(options: ProcessOptions): ManagedProcess {
   const output = new OutputCollector(child);
   const completion = new Promise<ProcessResult>((resolve, reject) => {
     child.once("error", reject);
-    child.stdin!.on("error", (error: NodeJS.ErrnoException) => {
+    child.stdin.on("error", (error: NodeJS.ErrnoException) => {
       if (error.code !== "EPIPE") reject(error);
     });
     child.once("close", (exitCode, signal) => {
@@ -155,12 +176,14 @@ function launch(options: ProcessOptions): ManagedProcess {
           signal,
         });
       } catch (error) {
-        reject(error);
+        reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   });
-  completion.catch(() => killGroup(child, "SIGKILL"));
-  child.stdin!.end(options.stdin);
+  completion.catch(() => {
+    killGroup(child, "SIGKILL");
+  });
+  child.stdin.end(options.stdin);
   return { child, completion, output };
 }
 
@@ -173,13 +196,31 @@ export class OutputCollector {
   private overflow?: Error;
 
   constructor(child: ChildProcess) {
-    child.stdout!.on("data", (chunk: Buffer) => this.add("stdout", chunk, child));
-    child.stderr!.on("data", (chunk: Buffer) => this.add("stderr", chunk, child));
+    const stdout = child.stdout;
+    const stderr = child.stderr;
+    if (stdout === null || stderr === null)
+      throw new Error("spawned process has no piped stdout/stderr");
+    stdout.on("data", (chunk: Buffer) => {
+      this.add("stdout", chunk, child);
+    });
+    stderr.on("data", (chunk: Buffer) => {
+      this.add("stderr", chunk, child);
+    });
   }
 
-  stdoutText(): string { return decode(Buffer.concat(this.stdout)); }
-  stderrText(): string { return decode(Buffer.concat(this.stderr)); }
-  finish(): void { if (this.overflow) throw this.overflow; }
+  stdoutText(): string {
+    return decode(Buffer.concat(this.stdout));
+  }
+  stderrText(): string {
+    return decode(Buffer.concat(this.stderr));
+  }
+  readyText(stream: "stdout" | "stderr"): string {
+    const source = stream === "stdout" ? this.stdout : this.stderr;
+    return new TextDecoder("utf-8").decode(Buffer.concat(source));
+  }
+  finish(): void {
+    if (this.overflow) throw this.overflow;
+  }
 
   private add(stream: "stdout" | "stderr", chunk: Buffer, child: ChildProcess): void {
     const next = (stream === "stdout" ? this.stdoutSize : this.stderrSize) + chunk.length;
@@ -188,8 +229,13 @@ export class OutputCollector {
       killGroup(child, "SIGKILL");
       return;
     }
-    if (stream === "stdout") { this.stdout.push(chunk); this.stdoutSize = next; }
-    else { this.stderr.push(chunk); this.stderrSize = next; }
+    if (stream === "stdout") {
+      this.stdout.push(chunk);
+      this.stdoutSize = next;
+    } else {
+      this.stderr.push(chunk);
+      this.stderrSize = next;
+    }
     for (const callback of this.changed) callback();
   }
 }
@@ -200,5 +246,13 @@ function decode(buffer: Buffer): string {
 
 function killGroup(child: ChildProcess, signal: NodeJS.Signals): void {
   if (child.pid === undefined || child.exitCode !== null || child.signalCode !== null) return;
-  try { process.kill(-child.pid, signal); } catch { try { child.kill(signal); } catch { /* exited */ } }
+  try {
+    process.kill(-child.pid, signal);
+  } catch {
+    try {
+      child.kill(signal);
+    } catch {
+      /* exited */
+    }
+  }
 }

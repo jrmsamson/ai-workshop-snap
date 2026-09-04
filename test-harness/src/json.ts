@@ -11,7 +11,9 @@ class JsonScanner {
   private index = 0;
   constructor(private readonly text: string) {}
 
-  done(): boolean { return this.index === this.text.length; }
+  done(): boolean {
+    return this.index === this.text.length;
+  }
 
   space(): void {
     while (/\s/.test(this.text[this.index] ?? "")) this.index++;
@@ -20,9 +22,18 @@ class JsonScanner {
   value(path: string): void {
     this.space();
     const c = this.text[this.index];
-    if (c === "{") return this.object(path);
-    if (c === "[") return this.array(path);
-    if (c === '"') { this.string(); return; }
+    if (c === "{") {
+      this.object(path);
+      return;
+    }
+    if (c === "[") {
+      this.array(path);
+      return;
+    }
+    if (c === '"') {
+      this.string();
+      return;
+    }
     this.primitive();
   }
 
@@ -30,8 +41,11 @@ class JsonScanner {
     this.index++;
     this.space();
     const keys = new Set<string>();
-    if (this.text[this.index] === "}") { this.index++; return; }
-    while (true) {
+    if (this.text[this.index] === "}") {
+      this.index++;
+      return;
+    }
+    for (;;) {
       this.space();
       const key = this.string();
       if (keys.has(key)) throw new Error(`duplicate JSON key at ${path}.${key}`);
@@ -49,10 +63,14 @@ class JsonScanner {
   private array(path: string): void {
     this.index++;
     this.space();
-    if (this.text[this.index] === "]") { this.index++; return; }
+    if (this.text[this.index] === "]") {
+      this.index++;
+      return;
+    }
     let i = 0;
-    while (true) {
-      this.value(`${path}[${i++}]`);
+    for (;;) {
+      this.value(`${path}[${String(i)}]`);
+      i++;
       this.space();
       const c = this.text[this.index++];
       if (c === "]") return;
@@ -76,7 +94,8 @@ class JsonScanner {
 
   private primitive(): void {
     const start = this.index;
-    while (this.index < this.text.length && !/[\s,\]}]/.test(this.text[this.index])) this.index++;
+    while (this.index < this.text.length && !/[\s,\]}]/.test(this.text[this.index] ?? ""))
+      this.index++;
     if (this.index === start) throw new Error("invalid JSON value");
   }
 

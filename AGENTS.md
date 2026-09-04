@@ -25,22 +25,36 @@ their meaning.
 
 ## Verification
 
-After implementation changes, run the shared acceptance suite:
+After implementation changes, run the strictness gate before the acceptance
+suite:
 
 ```bash
-./capstones/snap/verify --lang ts
+cd ts && npm run preflight
 ```
-
-Replace `ts` with `rust` or `scala` when appropriate.
-
 
 After harness changes, also run:
 
 ```bash
-cd capstones/snap/test-harness
-npm run check
+cd test-harness && npm run preflight
 npm test
 ```
+
+Then run the shared acceptance suite:
+
+```bash
+./verify --lang ts
+```
+
+Replace `ts` with `rust` or `scala` when appropriate. The bundled `ts/` scaffold
+is currently an unimplemented stub (`src/main.ts` prints "not implemented" and
+exits 1), so a red `--lang ts` acceptance run is expected until the CLI is
+implemented; treat `preflight` as the meaningful green gate meanwhile.
+
+`npm run preflight` is typecheck + lint (`typescript-eslint` strictTypeChecked) +
+Prettier format check. Strictness is enforced by these npm scripts only; there
+are no git hooks and CI does not run them. The verifier installs locked
+dependencies with `npm ci`, so keep both `package-lock.json` files in sync with
+their `package.json` in the same change.
 
 ## Scope discipline
 
