@@ -4,6 +4,22 @@ Implement the contract in the packaged `SPEC.md`; the language-neutral public
 tests are the acceptance criteria. Use strict TypeScript, avoid `any`, and use
 `node:` prefixes for Node built-ins.
 
+## File layout
+
+- `src/main.ts` — entry point and CLI dispatch (env → parse → command → exit code).
+- `src/cli/` — argument parsing and the command implementations (`run*` per command).
+- `src/core/` — pure, effect-free domain logic: version algebra, tracked-path and
+  text validation, canonical diff, OT, and patch/change application.
+- `src/format/` — on-disk JSON: a total RFC 8259 parser and Effect `Schema`
+  documentation of the repository/config shapes.
+- `src/repository/` — repository validation and canonical serialization, replay,
+  config read/write, and filesystem materialization + working-tree scanning.
+- `src/http/` — the `serve` snapshot server and `fetchRepository`.
+- `src/presentation/` — terminal output: SGR styling, color resolution, render helpers.
+- `snap` — the executable shim the harness runs.
+
+Colocated `*.test.ts` files live next to the module they exercise.
+
 ## Setup, build, run, and test
 
 ```bash
