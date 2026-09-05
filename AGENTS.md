@@ -46,9 +46,8 @@ Then run the shared acceptance suite:
 ```
 
 Replace `ts` with `rust` or `scala` when appropriate. The bundled `ts/` scaffold
-is currently an unimplemented stub (`src/main.ts` prints "not implemented" and
-exits 1), so a red `--lang ts` acceptance run is expected until the CLI is
-implemented; treat `preflight` as the meaningful green gate meanwhile.
+is a complete implementation, so both `preflight` and `./verify --lang ts` must
+pass before shipping.
 
 `npm run preflight` is typecheck + lint (`typescript-eslint` strictTypeChecked) +
 Prettier format check. Strictness is enforced by these npm scripts only; there
